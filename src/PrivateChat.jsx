@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, orderBy, addDoc, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, addDoc, doc, getDoc, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { Typography, Box, CircularProgress, Link, Button } from '@mui/material';
 import { useFirebase } from './Initializer';
@@ -77,6 +77,12 @@ const PrivateChat = () => {
       const batch = writeBatch(firestore);
       snap.docs.forEach(d => batch.delete(doc(firestore, 'private_messages', d.id)));
       await batch.commit();
+      // also add this user to my hiddenContacts so they no longer appear in my sidebar
+      try {
+        await setDoc(doc(firestore, 'users', user.uid, 'hiddenContacts', otherUid), { hiddenAt: new Date().toISOString() });
+      } catch (e) {
+        console.error('Failed to hide contact', e);
+      }
       // clear unread marker for this user
       if (markPrivateAsRead && otherUid) markPrivateAsRead(otherUid);
       alert('Conversation deleted.');

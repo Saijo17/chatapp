@@ -11,7 +11,12 @@ const Users = () => {
   const usersQuery = query(usersRef, orderBy('displayName'));
   const [usersSnapshot] = useCollection(usersQuery);
 
+  // hidden contacts subcollection for current user
+  const hiddenRef = user ? collection(firestore, 'users', user.uid, 'hiddenContacts') : null;
+  const [hiddenSnapshot] = useCollection(hiddenRef);
+
   const users = usersSnapshot ? usersSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+  const hiddenIds = hiddenSnapshot ? hiddenSnapshot.docs.map(d => d.id) : [];
 
   return (
     <Box>
@@ -19,6 +24,7 @@ const Users = () => {
         {users.length === 0 && <Typography sx={{ p: 2 }}>No contacts found</Typography>}
         {users.map(u => {
           if (u.id === user?.uid) return null;
+          if (hiddenIds.includes(u.id)) return null; // skip hidden contacts
           return (
             <UserListItem key={u.id} u={u} unread={!!(unreadMap && unreadMap[u.id])} />
           );
