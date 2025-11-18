@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, query, where, orderBy, addDoc, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { Typography, Box, CircularProgress, Link } from '@mui/material';
+import { Typography, Box, CircularProgress, Link, Button } from '@mui/material';
 import { useFirebase } from './Initializer';
 import Body from './component/Body';
 import Foot from './component/Foot';
