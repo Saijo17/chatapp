@@ -206,6 +206,8 @@ const Call = () => {
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
+                                zIndex: 0,
+                                pointerEvents: 'none',
                             }}
                         />
                         <Typography 
@@ -231,7 +233,7 @@ const Call = () => {
                                 position: 'absolute',
                                 bottom: '20px',
                                 right: '20px',
-                                width: { xs: '120px', sm: '200px' },
+                                width: { xs: '100px', sm: '180px' },
                                 borderRadius: 2,
                                 border: '2px solid rgba(255,255,255,0.5)',
                                 boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
@@ -245,12 +247,14 @@ const Call = () => {
                         {/*  */}
                         <Box sx={{ 
                             position: 'absolute', 
-                            bottom: '20px', 
+                            bottom: { xs: '12px', md: '20px' }, 
                             left: '50%', 
                             transform: 'translateX(-50%)',
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            zIndex: 10,
+                            pointerEvents: 'auto'
                         }}>
                             <Button 
                                 onClick={() => navigator.clipboard.writeText(window.location.href)}
@@ -273,7 +277,7 @@ const Call = () => {
                                                                             setMuted(newMuted);
                                                                         }}
                                                                         variant="contained"
-                                                                        sx={{ borderRadius: '50px', padding: '10px 16px', background: 'rgba(255,255,255,0.15)', color: 'white' }}
+                                                                        sx={{ borderRadius: '50px', padding: { xs: '8px 12px', md: '10px 16px' }, background: 'rgba(255,255,255,0.15)', color: 'white' }}
                                                                     >
                                                                         {muted ? <MicOffIcon /> : <MicIcon />}
                                                                     </Button>
@@ -282,7 +286,7 @@ const Call = () => {
                                                                         onClick={() => window.location.href = "/call"} 
                                                                         variant="contained"
                                                                         color="error"
-                                                                        sx={{ borderRadius: '50px', padding: '12px 24px' }}
+                                                                        sx={{ borderRadius: '50px', padding: { xs: '10px 16px', md: '12px 24px' } }}
                                                                     >
                                                                         <CallEndIcon />
                                                                     </Button>
