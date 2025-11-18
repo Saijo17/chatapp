@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, orderBy, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, addDoc, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { Typography, Box, CircularProgress, Link } from '@mui/material';
 import { useFirebase } from './Initializer';
@@ -64,6 +64,28 @@ const PrivateChat = () => {
     }
   };
 
+  const deleteConversation = async () => {
+    const ok = window.confirm('Delete this entire conversation? This cannot be undone.');
+    if (!ok) return;
+    try {
+      const q = query(collection(firestore, 'private_messages'), where('threadId', '==', threadId));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        alert('No messages to delete.');
+        return;
+      }
+      const batch = writeBatch(firestore);
+      snap.docs.forEach(d => batch.delete(doc(firestore, 'private_messages', d.id)));
+      await batch.commit();
+      // clear unread marker for this user
+      if (markPrivateAsRead && otherUid) markPrivateAsRead(otherUid);
+      alert('Conversation deleted.');
+    } catch (err) {
+      console.error('Failed to delete conversation', err);
+      alert('Failed to delete conversation: ' + (err.message || err));
+    }
+  };
+
   // mark this thread as read when opening the chat
   React.useEffect(() => {
     if (markPrivateAsRead && otherUid) markPrivateAsRead(otherUid);
@@ -72,6 +94,9 @@ const PrivateChat = () => {
   return (
     <>
       <Heading setDarkMode={setDarkMode} darkMode={darkMode} userImg={user.photoURL} userName={user.displayName} userSignOut={() => auth.signOut()} title={otherName} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
+        <Button variant="outlined" color="error" onClick={deleteConversation}>Delete Conversation</Button>
+      </Box>
       <Box sx={{ minHeight: '70vh' }}>
         {loading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
