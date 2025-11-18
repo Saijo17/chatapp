@@ -38,7 +38,8 @@ function Message(props) {
 
   const handleDelete = async() => {
     handleMenuClose();
-    const docRef = doc(firestore, "messages", props.docId);
+    const collectionName = props.collectionName || "messages";
+    const docRef = doc(firestore, collectionName, props.docId);
     await deleteDoc(docRef);
     console.log(props);
     console.log("Delete message:", props.docId);

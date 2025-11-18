@@ -40,6 +40,7 @@ function Body(props) {
           darkMode={props.darkMode}
           currentUser={props.currentUser}
           uid={mes.uid}
+          collectionName={props.collectionName}
         />);
 })}
       <div ref={messagesEndRef} />

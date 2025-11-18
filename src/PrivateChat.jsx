@@ -96,7 +96,7 @@ const PrivateChat = () => {
           messages.length === 0 ? (
             <Typography sx={{ textAlign: 'center', mt: 6 }}>* No messages yet *</Typography>
           ) : (
-            <Body messages={messages} darkMode={darkMode} currentUser={user} />
+            <Body messages={messages} darkMode={darkMode} currentUser={user} collectionName={'private_messages'} />
           )
         )}
       </Box>
