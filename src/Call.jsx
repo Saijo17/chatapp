@@ -49,22 +49,37 @@ const Call = () => {
     const webCamOn = async () => {
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            remoteStream = new MediaStream();
+            // add local tracks to the peer connection
             localStream.getTracks().forEach((track) => {
                 pc.addTrack(track, localStream);
             });
+
+            // When a remote track arrives, attach the remote stream directly to the video element
             pc.ontrack = (event) => {
-                event.streams[0].getTracks().forEach((track) => {
-                    remoteStream.addTrack(track);
-                });
+                try {
+                    const incomingStream = event.streams && event.streams[0] ? event.streams[0] : null;
+                    if (incomingStream) {
+                        remoteStream = incomingStream;
+                        if (remoteVideoRef.current) {
+                            remoteVideoRef.current.srcObject = remoteStream;
+                            remoteVideoRef.current.play().catch(() => {});
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error handling ontrack', e);
+                }
             };
-            if (webcamVideoRef.current && remoteVideoRef.current) {
+
+            // Attach local stream to local video element immediately
+            if (webcamVideoRef.current) {
                 webcamVideoRef.current.srcObject = localStream;
-                remoteVideoRef.current.srcObject = remoteStream;
+                // mute local preview to avoid feedback
+                try { webcamVideoRef.current.muted = true; } catch (e) {}
+                webcamVideoRef.current.play().catch(() => {});
             }
         }
-        catch {
-            console.log('error setting webcam and mic')
+        catch (err) {
+            console.error('error setting webcam and mic', err)
         }
     };
     async function createCall() {
