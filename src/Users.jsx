@@ -24,9 +24,12 @@ const Users = () => {
         {users.length === 0 && <Typography sx={{ p: 2 }}>No contacts found</Typography>}
         {users.map(u => {
           if (u.id === user?.uid) return null;
-          if (hiddenIds.includes(u.id)) return null; // skip hidden contacts
+          const isHidden = hiddenIds.includes(u.id);
+          const hasUnread = !!(unreadMap && unreadMap[u.id]);
+          // If hidden and no unread messages, skip; otherwise show (so new messages make contact reappear)
+          if (isHidden && !hasUnread) return null;
           return (
-            <UserListItem key={u.id} u={u} unread={!!(unreadMap && unreadMap[u.id])} />
+            <UserListItem key={u.id} u={u} unread={hasUnread} />
           );
         })}
       </List>
