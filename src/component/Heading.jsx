@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { AppBar, Toolbar, IconButton, Drawer, Typography, Button, List, ListItemText, ListItemIcon, ListItemButton } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { AppBar, Toolbar, IconButton, Drawer, Typography, Button, List, ListItemText, ListItemIcon, ListItemButton, Snackbar, Alert } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -7,7 +7,8 @@ import UserIcon from "./UserIcon";
 import LogoutIcon from '@mui/icons-material/Logout';
 import CallIcon from '@mui/icons-material/Call';
 import Users from '../Users';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useFirebase } from '../Initializer';
 import ChatIcon from '@mui/icons-material/Chat';
 import VideoCallIcon from '@mui/icons-material/VideoCall';
 
@@ -106,21 +107,51 @@ function Title({ title }) {
 }
 
 function Heading({ setDarkMode, darkMode, userImg, userName, userSignOut, title }) {
+  const { privateNotification, clearPrivateNotification } = useFirebase();
+  const navigate = useNavigate();
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  useEffect(() => {
+    setNotifOpen(!!privateNotification);
+  }, [privateNotification]);
+
+  const handleNotifClose = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setNotifOpen(false);
+    clearPrivateNotification();
+  };
+
+  const openDM = () => {
+    if (privateNotification?.fromUid) {
+      navigate(`/dm/${privateNotification.fromUid}`);
+      clearPrivateNotification();
+      setNotifOpen(false);
+    }
+  };
+
   return (
-    <AppBar position="sticky">
-      <Toolbar>
-        <MenuThing setDarkMode={setDarkMode} darkMode={darkMode} userImg={userImg} userName={userName} userSignOut={userSignOut} />
-        <Title title={title} />
-        <IconButton sx={{p: 2}} onClick={()=>{
-          window.open('/call')
-        }}>
-            <VideoCallIcon sx={{width: '30px', height:'30px'}} />
-        </IconButton>
-        <Button color="inherit">
-          <UserIcon img={userImg} />
-        </Button>
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar position="sticky">
+        <Toolbar>
+          <MenuThing setDarkMode={setDarkMode} darkMode={darkMode} userImg={userImg} userName={userName} userSignOut={userSignOut} />
+          <Title title={title} />
+          <IconButton sx={{p: 2}} onClick={()=>{
+            window.open('/call')
+          }}>
+              <VideoCallIcon sx={{width: '30px', height:'30px'}} />
+          </IconButton>
+          <Button color="inherit">
+            <UserIcon img={userImg} />
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      <Snackbar open={notifOpen} autoHideDuration={8000} onClose={handleNotifClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <Alert onClose={handleNotifClose} severity="info" sx={{ width: '100%' }} action={<Button color="inherit" size="small" onClick={openDM}>Open</Button>}>
+          {privateNotification ? `${privateNotification.senderName || 'New message'}: ${privateNotification.content}` : 'New private message'}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

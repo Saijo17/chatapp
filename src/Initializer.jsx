@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
@@ -22,18 +22,18 @@ const auth = getAuth(firebaseApp);
 const firestore = getFirestore(firebaseApp);
 const FirebaseContext = createContext();
 
-// NEW: Updated Light Theme
+
 const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#673ab7', // A deep purple
+      main: '#673ab7', 
     },
     secondary: {
-      main: '#ff4081', // A vibrant pink
+      main: '#ff4081', 
     },
     background: {
-      default: '#f4f7fa', // A very light, soft gray
+      default: '#f4f7fa', 
       paper: '#ffffff',
     },
   },
@@ -47,23 +47,22 @@ const lightTheme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12, // More rounded borders
+    borderRadius: 12,
   },
 });
 
-// NEW: Updated Dark Theme
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#9575cd', // Lighter purple for dark mode
+      main: '#9575cd', 
     },
     secondary: {
-      main: '#f06292', // Lighter pink
+      main: '#f06292', 
     },
     background: {
       default: '#121212',
-      paper: '#1e1e1e', // A slightly lighter "paper" color
+      paper: '#1e1e1e', 
     },
   },
   typography: {
@@ -96,13 +95,16 @@ export const FirebaseProvider = ({ children }) => {
     const [user, loading, error] = useAuthState(auth);
     const [initialized, setInitialized] = useState(false);
     const [darkMode, setDarkMode] = useState(getDarkModeValue());
+  const [privateNotification, setPrivateNotification] = useState(null);
+  const lastNotIdRef = useRef(null);
+  const [unreadMap, setUnreadMap] = useState({});
     useEffect(() => {
         if (!loading) {
             setInitialized(true);
         }
     }, [loading]);
 
-    // Ensure a user document exists for each authenticated user
+ 
     useEffect(() => {
       async function ensureUserDoc() {
         if (user) {
@@ -114,7 +116,7 @@ export const FirebaseProvider = ({ children }) => {
               updatedAt: new Date().toISOString(),
             }, { merge: true });
           } catch (e) {
-            // silent - non-critical for app flow
+            
             console.error('Failed to create/update user doc', e);
           }
         }
@@ -122,8 +124,44 @@ export const FirebaseProvider = ({ children }) => {
       ensureUserDoc();
     }, [user]);
 
+    
+    useEffect(() => {
+      if (!user) {
+        setPrivateNotification(null);
+        lastNotIdRef.current = null;
+        return;
+      }
+
+      const q = query(collection(firestore, 'private_messages'), where('to', '==', user.uid), orderBy('time', 'desc'), limit(1));
+      const unsub = onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const d = snap.docs[0];
+          const data = d.data();
+          if (data.uid === user.uid) return; 
+          if (d.id !== lastNotIdRef.current) {
+            lastNotIdRef.current = d.id;
+            setPrivateNotification({ id: d.id, fromUid: data.uid, senderName: data.senderName || '', content: data.content || '', threadId: data.threadId || '' });
+            // mark unread for that sender
+            setUnreadMap(prev => ({ ...prev, [data.uid]: true }));
+          }
+        }
+      }, (err) => console.error('private_messages listener error', err));
+
+      return () => unsub();
+    }, [user, firestore]);
+
+    const clearPrivateNotification = () => setPrivateNotification(null);
+    const markPrivateAsRead = (fromUid) => {
+      setUnreadMap(prev => {
+        if (!prev) return {};
+        const copy = { ...prev };
+        if (copy[fromUid]) delete copy[fromUid];
+        return copy;
+      });
+    };
+
     return (
-        <FirebaseContext.Provider value={{ user, auth, firestore, darkMode, setDarkMode }}>
+      <FirebaseContext.Provider value={{ user, auth, firestore, darkMode, setDarkMode, privateNotification, clearPrivateNotification, unreadMap, markPrivateAsRead }}>
             {initialized ? <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>{children}</ThemeProvider > : <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -134,5 +172,5 @@ export const FirebaseProvider = ({ children }) => {
     );
 };
 
-// Custom hook to use Firebase context
+
 export const useFirebase = () => useContext(FirebaseContext);
