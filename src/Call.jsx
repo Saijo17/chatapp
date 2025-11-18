@@ -7,6 +7,8 @@ import { collection, updateDoc, addDoc, getDoc, onSnapshot, doc, setDoc } from '
 import CallEndIcon from '@mui/icons-material/CallEnd';
 import CallIcon from '@mui/icons-material/Call';
 import AddIcCallIcon from '@mui/icons-material/AddIcCall';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 import { Navigate } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -41,6 +43,7 @@ const Call = () => {
     const [id, setId] = useState(initializeId())
     const { user, auth, firestore, darkMode, setDarkMode } = useFirebase();
     const [isInCall, setIsInCall] = useState(false)
+    const [muted, setMuted] = useState(false);
     const webcamVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const webCamOn = async () => {
@@ -240,14 +243,35 @@ const Call = () => {
                             >
                                 {id} <ContentCopyIcon sx={{ ml: 1, fontSize: '16px' }} />
                             </Button>
-                            <Button 
-                                onClick={() => window.location.href = "/call"} 
-                                variant="contained"
-                                color="error"
-                                sx={{ borderRadius: '50px', padding: '12px 24px' }}
-                            >
-                                <CallEndIcon />
-                            </Button>
+                                                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            // toggle mute
+                                                                            const newMuted = !muted;
+                                                                            try {
+                                                                                if (localStream) {
+                                                                                    localStream.getAudioTracks().forEach(t => t.enabled = !newMuted);
+                                                                                }
+                                                                            } catch (e) {
+                                                                                console.error('Failed to toggle mute', e);
+                                                                            }
+                                                                            setMuted(newMuted);
+                                                                        }}
+                                                                        variant="contained"
+                                                                        sx={{ borderRadius: '50px', padding: '10px 16px', background: 'rgba(255,255,255,0.15)', color: 'white' }}
+                                                                    >
+                                                                        {muted ? <MicOffIcon /> : <MicIcon />}
+                                                                    </Button>
+
+                                                                    <Button 
+                                                                        onClick={() => window.location.href = "/call"} 
+                                                                        variant="contained"
+                                                                        color="error"
+                                                                        sx={{ borderRadius: '50px', padding: '12px 24px' }}
+                                                                    >
+                                                                        <CallEndIcon />
+                                                                    </Button>
+                                                                </Box>
                         </Box>
                     </Box>
                 ) : (
