@@ -292,6 +292,37 @@ const Call = () => {
                                                                     </Button>
                                                                 </Box>
                         </Box>
+                        {/* Fixed controls (guaranteed on top) */}
+                        <Box sx={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, pointerEvents: 'auto' }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <Button
+                                    onClick={() => {
+                                        const newMuted = !muted;
+                                        try {
+                                            if (localStream) {
+                                                localStream.getAudioTracks().forEach(t => t.enabled = !newMuted);
+                                            }
+                                        } catch (e) {
+                                            console.error('Failed to toggle mute', e);
+                                        }
+                                        setMuted(newMuted);
+                                    }}
+                                    variant="contained"
+                                    sx={{ borderRadius: '50px', padding: { xs: '8px 12px', md: '10px 16px' }, background: 'rgba(255,255,255,0.12)', color: 'white' }}
+                                >
+                                    {muted ? <MicOffIcon /> : <MicIcon />}
+                                </Button>
+
+                                <Button
+                                    onClick={() => window.location.href = "/call"}
+                                    variant="contained"
+                                    color="error"
+                                    sx={{ borderRadius: '50px', padding: { xs: '10px 16px', md: '12px 24px' } }}
+                                >
+                                    <CallEndIcon />
+                                </Button>
+                            </Box>
+                        </Box>
                     </Box>
                 ) : (
                     <Box sx={{ margin: 5, textAlign: 'center', display: 'flex', flexDirection: 'column', width: '50vw', justifyContent: 'space-around', height: '50vh', marginX: 'auto' }}>
