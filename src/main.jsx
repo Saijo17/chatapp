@@ -6,6 +6,8 @@ import Sign from './Sign.jsx';
 import Chat from "./Chat.jsx";
 import { FirebaseProvider } from './Initializer.jsx';
 import Call from './Call.jsx';
+import Users from './Users.jsx';
+import PrivateChat from './PrivateChat.jsx';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <FirebaseProvider>
@@ -13,6 +15,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path='/' element={<Sign />} />
           <Route path='/chat' element={<Chat />} />
+          <Route path='/users' element={<Users />} />
+          <Route path='/dm/:otherUid' element={<PrivateChat />} />
           <Route path='/call' element={<Call />} />
         </Routes>
       </Router>

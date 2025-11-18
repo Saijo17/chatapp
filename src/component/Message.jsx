@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Typography, IconButton, Menu, MenuItem, Fade } from "@mui/material"; // Import Fade
+import { useNavigate } from 'react-router-dom';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UserIcon from "./UserIcon";
 import { doc, deleteDoc } from "firebase/firestore";
@@ -25,6 +26,14 @@ function Message(props) {
   const handleReply = () => {
     handleMenuClose();
     console.log("Reply to:", props.content);
+  };
+
+  const navigate = useNavigate();
+  const handleDirectMessage = () => {
+    handleMenuClose();
+    if (props.uid) {
+      navigate(`/dm/${props.uid}`);
+    }
   };
 
   const handleDelete = async() => {
@@ -115,6 +124,7 @@ function Message(props) {
               horizontal: 'right',
             }}
           >
+            {isSenderPresent && <MenuItem onClick={handleDirectMessage}>Message privately</MenuItem>}
             <MenuItem onClick={handleReply}>Reply</MenuItem>
             {props.uid===user.uid && <MenuItem onClick={handleDelete}>Delete</MenuItem>}
           </Menu>

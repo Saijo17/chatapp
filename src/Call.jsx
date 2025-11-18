@@ -224,7 +224,7 @@ const Call = () => {
                             }}
                         />
                         
-                        {/* Call Controls (Overlay) */}
+                        {/*  */}
                         <Box sx={{ 
                             position: 'absolute', 
                             bottom: '20px', 

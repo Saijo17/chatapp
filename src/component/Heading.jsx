@@ -5,8 +5,8 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import UserIcon from "./UserIcon";
 import LogoutIcon from '@mui/icons-material/Logout';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import CallIcon from '@mui/icons-material/Call';
+import Users from '../Users';
 import { useLocation } from 'react-router-dom';
 import ChatIcon from '@mui/icons-material/Chat';
 import VideoCallIcon from '@mui/icons-material/VideoCall';
@@ -79,15 +79,8 @@ function MenuThing({ setDarkMode, darkMode, userImg, userName, userSignOut }) {
               </ListItemIcon>
               <ListItemText primary='Start chatting ' />
             </ListItemButton>}
-          <ListItemButton onClick={() => {
-            window.open('https://github.com/Saijo17');
-            handleClose()
-          }}>
-            <ListItemIcon>
-              <GitHubIcon />
-            </ListItemIcon>
-            <ListItemText primary="@dipen.git" />
-          </ListItemButton>
+          {/* Inline contacts list so users appear in the drawer */}
+          <Users />
           <ListItemButton onClick={darkMode ? setLightModeOn : setDarkModeOn}>
             <ListItemIcon>{darkMode ? <LightModeIcon /> : <DarkModeIcon />}</ListItemIcon>
             <ListItemText primary={darkMode ? "Light Mode" : "Dark Mode"} />

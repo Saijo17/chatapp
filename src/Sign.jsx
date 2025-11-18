@@ -1,84 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { useFirebase } from './Initializer';
-import { Button, TextField, Container, Typography, Box, CssBaseline, Grid, Paper } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import BackgroundVideo from './assets/background.mp4';
-import GoogleLogo from './assets/google-logo.png';
-import { Navigate } from 'react-router-dom';
-import PopupMsg from './component/PopupMsg';
 
-// Using a default theme here, but it will be overridden by the Provider's theme
+
+import React, { useState, useEffect } from 'react';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+} from "firebase/auth";
+
+import { useFirebase } from "./Initializer";
+import {
+  Button,
+  TextField,
+  Container,
+  Typography,
+  Box,
+  CssBaseline,
+  Grid,
+  Paper,
+} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import BackgroundVideo from "./assets/background.mp4";
+import GoogleLogo from "./assets/google-logo.png";
+import { Navigate } from "react-router-dom";
+import PopupMsg from "./component/PopupMsg";
+
 const theme = createTheme();
 
 const Sign = () => {
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+
+  const [signUpName, setSignUpName] = useState("");
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+
   const [openModal, setOpenModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [modalMessage, setModalMessage] = useState("");
   const [hasInteracted, setHasInteracted] = useState(false);
+
   const { user, auth } = useFirebase();
+
 
   useEffect(() => {
     if (user && !auth?.currentUser?.emailVerified && hasInteracted) {
-      setModalMessage('A verification email has been sent to your email address. Please check your inbox and verify your email to continue.');
+      setModalMessage(
+        "A verification email has been sent to your email. Please verify before continuing."
+      );
       setOpenModal(true);
     }
   }, [user, auth, hasInteracted]);
 
-  const handleSignUpClick = () => {
-    setIsRightPanelActive(true);
-  };
-
-  const handleSignInClick = () => {
-    setIsRightPanelActive(false);
-  };
+  const handleSignUpClick = () => setIsRightPanelActive(true);
+  const handleSignInClick = () => setIsRightPanelActive(false);
 
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    signInWithPopup(auth, provider).catch((err) => {
+      setModalMessage(err.message);
+      setOpenModal(true);
+    });
   };
 
   const signUpWithEmail = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        signUpEmail,
+        signUpPassword
+      );
+
+      const currentUser = userCredential.user;
 
       const response = await fetch("https://picsum.photos/300/300");
-      const actualPhotoURL = response.url; 
+      const actualPhotoURL = response.url;
 
-      await updateProfile(user, {
-        displayName: name,
+      await updateProfile(currentUser, {
+        displayName: signUpName,
         photoURL: actualPhotoURL,
       });
 
-      await sendEmailVerification(user);
-      setModalMessage('A verification email has been sent to your email address. Please check your inbox and verify your email to continue.');
+      await sendEmailVerification(currentUser);
+
+      setModalMessage(
+        "A verification email has been sent. Please check your inbox."
+      );
       setHasInteracted(true);
       setOpenModal(true);
-    } catch (error) {
-      setModalMessage(error.message);
+    } catch (err) {
+      setModalMessage(err.message);
       setOpenModal(true);
-      console.error("Error signing up:", error.message);
     }
   };
 
   const signInWithEmail = () => {
-    signInWithEmailAndPassword(auth, email, password)
+    signInWithEmailAndPassword(auth, signInEmail, signInPassword)
       .then((userCredential) => {
         if (!userCredential.user.emailVerified) {
-          setModalMessage('Please verify your email address before proceeding.');
+          setModalMessage("Please verify your email before signing in.");
           setOpenModal(true);
         } else {
           setHasInteracted(true);
         }
       })
-      .catch((error) => {
-        setModalMessage(error.message);
+      .catch((err) => {
+        setModalMessage(err.message);
         setOpenModal(true);
-        console.error("Error signing in:", error.message);
       });
   };
 
@@ -89,134 +121,92 @@ const Sign = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+
       <Box
         sx={{
-          position: 'relative',
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
+          position: "relative",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          overflow: "hidden",
         }}
       >
+        {}
         <video
           autoPlay
           loop
           muted
           style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
             zIndex: -1,
           }}
         >
           <source src={BackgroundVideo} type="video/mp4" />
         </video>
-        <Container component="main" maxWidth="md" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {/* UPDATED: Glassmorphism Panel Style */}
-          <Paper 
-            elevation={6} 
-            sx={{ 
-              padding: 4, 
-              borderRadius: 4, // Larger border radius
-              width: '100%', 
-              maxWidth: '600px', 
-              transition: 'transform 0.5s ease-in-out', 
-              transform: isRightPanelActive ? 'scale(1.05)' : 'scale(1)', 
-              backgroundColor: 'rgba(255, 255, 255, 0.1)', // More transparent
-              backdropFilter: 'blur(15px)', // Increased blur
-              border: '1px solid rgba(255, 255, 255, 0.2)', // Subtle border
+
+        <Container maxWidth="md" sx={{ display: "flex", justifyContent: "center" }}>
+          <Paper
+            elevation={6}
+            sx={{
+              padding: 4,
+              borderRadius: 4,
+              width: "100%",
+              maxWidth: "600px",
+              transition: "0.5s",
+              transform: isRightPanelActive ? "scale(1.05)" : "scale(1)",
+              backgroundColor: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(15px)",
+              border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
             <Grid container spacing={2}>
+              {}
               <Grid item xs={12} sm={6}>
                 <Box
                   sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    transition: 'opacity 0.5s ease-in-out',
                     opacity: isRightPanelActive ? 0 : 1,
-                    pointerEvents: isRightPanelActive ? 'none' : 'auto',
+                    pointerEvents: isRightPanelActive ? "none" : "auto",
+                    transition: "0.5s",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
                 >
-                  <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="h5" fontWeight="bold">
                     Sign In
                   </Typography>
-                  <Box component="form" noValidate sx={{ mt: 1 }}>
+
+                  <Box sx={{ mt: 1 }}>
                     <TextField
-                      margin="normal"
-                      required
                       fullWidth
-                      id="email"
-                      label="Email Address"
-                      name="email"
-                      autoComplete='off'
-                      autoFocus
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      InputProps={{
-                        style: { backgroundColor: 'transparent' },
-                      }}
-                      InputLabelProps={{
-                        style: { fontWeight: 'bold' },
-                      }}
-                      sx={{
-                        '& .MuiAutocomplete-popupIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-clearIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-inputRoot': {
-                          backgroundColor: 'transparent !important',
-                        },
-                      }}
+                      required
+                      id="signin-email"
+                      label="Email"
+                      value={signInEmail}
+                      onChange={(e) => setSignInEmail(e.target.value)}
+                      autoComplete="off"
                     />
+
                     <TextField
-                      margin="normal"
-                      required
                       fullWidth
-                      name="password"
+                      required
+                      id="signin-password"
                       label="Password"
                       type="password"
-                      id="password"
-                      autoComplete='off'
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      InputProps={{
-                        style: { backgroundColor: 'transparent' },
-                      }}
-                      InputLabelProps={{
-                        style: { fontWeight: 'bold' },
-                      }}
-                      sx={{
-                        '& .MuiAutocomplete-popupIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-clearIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-inputRoot': {
-                          backgroundColor: 'transparent !important',
-                        },
-                      }}
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      autoComplete="off"
+                      sx={{ mt: 2 }}
                     />
-                    {/* UPDATED: Gradient Button Style */}
+
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        background: 'linear-gradient(45deg, #673ab7 30%, #ff4081 90%)',
-                        boxShadow: '0 3px 5px 2px rgba(103, 58, 183, .3)',
-                        borderRadius: '20px',
-                        padding: '10px 20px',
-                      }}
+                      sx={{ mt: 3 }}
                       onClick={signInWithEmail}
                     >
                       Sign In
@@ -225,185 +215,95 @@ const Sign = () => {
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        fontWeight: 'bold',
-                        backgroundColor: '#4caf50',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: '#388e3c',
-                        },
-                        borderRadius: '20px',
-                        padding: '10px 20px',
-                        boxShadow: '0 3px 5px 2px rgba(76, 175, 80, .3)',
-                      }}
+                      sx={{ mt: 2, backgroundColor: "#4caf50" }}
                       onClick={handleSignUpClick}
                     >
-                      Sign Up
+                      Switch to Sign Up
                     </Button>
 
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        fontWeight: '',
-                        backgroundColor: 'white',
-                        color: 'black',
-                        '&:hover': {
-                          backgroundColor: 'white',
-                        },
-                        borderRadius: '20px',
-                        padding: '10px 20px',
-                        boxShadow: '0 3px 5px 2px rgba(219, 68, 55, .3)',
-                      }}
+                      sx={{ mt: 2, backgroundColor: "white", color: "black" }}
                       onClick={signInWithGoogle}
                     >
-                      <img src={GoogleLogo} alt="Google logo" style={{ width: '20px', marginRight: '10px' }} />
-                      Sign In/Up by Google
+                      <img
+                        src={GoogleLogo}
+                        alt="Google"
+                        style={{ width: "20px", marginRight: "10px" }}
+                      />
+                      Login with Google
                     </Button>
                   </Box>
                 </Box>
               </Grid>
+
+              {/* SIGN UP */}
               <Grid item xs={12} sm={6}>
                 <Box
                   sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    transition: 'opacity 0.5s ease-in-out',
                     opacity: isRightPanelActive ? 1 : 0,
-                    pointerEvents: isRightPanelActive ? 'auto' : 'none',
+                    pointerEvents: isRightPanelActive ? "auto" : "none",
+                    transition: "0.5s",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
                 >
-                  <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="h5" fontWeight="bold">
                     Sign Up
                   </Typography>
-                  <Box component="form" noValidate sx={{ mt: 1 }}>
+
+                  <Box sx={{ mt: 1 }}>
                     <TextField
-                      margin="normal"
-                      required
                       fullWidth
-                      id="name"
+                      required
+                      id="signup-name"
                       label="Name"
-                      name="name"
-                      autoComplete='off'
-                      onChange={(e) => setName(e.target.value)}
-                      autoFocus
-                      InputProps={{
-                        style: { backgroundColor: 'transparent' },
-                      }}
-                      InputLabelProps={{
-                        style: { fontWeight: 'bold' },
-                      }}
-                      sx={{
-                        '& .MuiAutocomplete-popupIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-clearIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-inputRoot': {
-                          backgroundColor: 'transparent !important',
-                        },
-                      }}
+                      value={signUpName}
+                      onChange={(e) => setSignUpName(e.target.value)}
+                      autoComplete="off"
                     />
+
                     <TextField
-                      margin="normal"
-                      required
                       fullWidth
-                      id="email"
-                      label="Email Address"
-                      name="email"
-                      autoComplete='off'
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      InputProps={{
-                        style: { backgroundColor: 'transparent' },
-                      }}
-                      InputLabelProps={{
-                        style: { fontWeight: 'bold' },
-                      }}
-                      sx={{
-                        '& .MuiAutocomplete-popupIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-clearIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-inputRoot': {
-                          backgroundColor: 'transparent !important',
-                        },
-                      }}
+                      required
+                      id="signup-email"
+                      label="Email"
+                      sx={{ mt: 2 }}
+                      value={signUpEmail}
+                      onChange={(e) => setSignUpEmail(e.target.value)}
+                      autoComplete="off"
                     />
+
                     <TextField
-                      margin="normal"
-                      required
                       fullWidth
-                      name="password"
-                      label="Password"
+                      required
+                      id="signup-password"
                       type="password"
-                      id="password"
-                      autoComplete='off'
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      InputProps={{
-                        style: { backgroundColor: 'transparent' },
-                      }}
-InputLabelProps={{
-                        style: { fontWeight: 'bold' },
-                      }}
-                      sx={{
-                        '& .MuiAutocomplete-popupIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-clearIndicator': {
-                          backgroundColor: 'transparent',
-                        },
-                        '& .MuiAutocomplete-inputRoot': {
-                          backgroundColor: 'transparent !important',
-                        },
-                      }}
+                      label="Password"
+                      sx={{ mt: 2 }}
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      autoComplete="off"
                     />
-                    {/* UPDATED: Gradient Button Style */}
+
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        background: 'linear-gradient(45deg, #673ab7 30%, #ff4081 90%)',
-                        boxShadow: '0 3px 5px 2px rgba(103, 58, 183, .3)',
-                        borderRadius: '20px',
-                        padding: '10px 20px',
-                      }}
+                      sx={{ mt: 3 }}
                       onClick={signUpWithEmail}
                     >
-                      Sign Up
+                      Create Account
                     </Button>
+
                     <Button
                       fullWidth
+                      sx={{ mt: 2, backgroundColor: "#4caf50" }}
                       variant="contained"
-                      sx={{
-                        mt: 3,
-                        mb: 2,
-                        fontWeight: 'bold',
-                        backgroundColor: '#4caf50',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: '#388e3c',
-                        },
-                        borderRadius: '20px',
-                        padding: '10px 20px',
-                        boxShadow: '0 3px 5px 2px rgba(63, 81, 181, .3)',
-                      }}
                       onClick={handleSignInClick}
                     >
-                      Sign In
+                      Back to Sign In
                     </Button>
                   </Box>
                 </Box>

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
@@ -101,6 +101,26 @@ export const FirebaseProvider = ({ children }) => {
             setInitialized(true);
         }
     }, [loading]);
+
+    // Ensure a user document exists for each authenticated user
+    useEffect(() => {
+      async function ensureUserDoc() {
+        if (user) {
+          try {
+            await setDoc(doc(firestore, 'users', user.uid), {
+              displayName: user.displayName || '',
+              photoURL: user.photoURL || '',
+              email: user.email || '',
+              updatedAt: new Date().toISOString(),
+            }, { merge: true });
+          } catch (e) {
+            // silent - non-critical for app flow
+            console.error('Failed to create/update user doc', e);
+          }
+        }
+      }
+      ensureUserDoc();
+    }, [user]);
 
     return (
         <FirebaseContext.Provider value={{ user, auth, firestore, darkMode, setDarkMode }}>
